@@ -24,7 +24,6 @@ class Mylistener(threading.Thread):
     def remove_service(self, zeroconf, type, name):
         self.ipaddress  = None
         self.port       = None
-        self.zeroconf.unregister_service(self.service_info)
         print("Service {} removed".format(name))
 
     def update_service(self,zeroconf, type, name):
@@ -63,15 +62,16 @@ if __name__ == "__main__":
                               port=1234
                                )
     
-    zeroconf = Zeroconf()
     try:
         while True:
             print("Starting Services\n")
+            zeroconf = Zeroconf()
             service_handler = Mylistener(zeroconf,dc_ip,service_info)
             service_handler.start()
             signal.pause()   #main thread will pause here
             zeroconf.unregister_service(service_info)
             service_handler.join()
+            zeroconf.close()
     except KeyboardInterrupt:
         pass
     finally:

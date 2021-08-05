@@ -2,7 +2,7 @@ import threading
 import os
 import signal
 import socket
-from zeroconf import ServiceInfo, Zeroconf
+from zeroconf import ServiceInfo, ServiceBrowser, Zeroconf
 from time import sleep as delay
 
 class Mylistener(threading.Thread):
@@ -24,6 +24,7 @@ class Mylistener(threading.Thread):
     def remove_service(self, zeroconf, type, name):
         self.ipaddress  = None
         self.port       = None
+        self.zeroconf.unregister_service(self.service_info)
         print("Service {} removed".format(name))
 
     def update_service(self,zeroconf, type, name):
@@ -37,7 +38,17 @@ class Mylistener(threading.Thread):
         self.port = info.port
         print("Service: {} is at {}:{}\n".format(name, self.ipaddress, self.port))
 
-if __name == "__main__":
+def get_ip_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    return s.getsockname()[0]
+
+def signal_handler(signalNumber,frame):
+    pass
+
+if __name__ == "__main__":
+
+    signal.signal(signal.SIGUSR1, signal_handler)
 
     while True:
         try:
@@ -48,16 +59,19 @@ if __name == "__main__":
     print("hey I got My Ip address {}".format(dc_ip))
     service_info=ServiceInfo("_http._tcp.local.",
                              "francis_job_testing_service._http._tcp.local.",
-                              addresses=[socket.inet_aton(self.dc_ip)],
+                              addresses=[socket.inet_aton(dc_ip)],
                               port=1234
                                )
     
     zeroconf = Zeroconf()
-    service_handler = Mylistner(zeroconf,dc_ip,service_info)
-    service_handler.start()
     try:
         while True:
-            sleep(0.1)
+            print("Starting Services\n")
+            service_handler = Mylistener(zeroconf,dc_ip,service_info)
+            service_handler.start()
+            signal.pause()   #main thread will pause here
+            zeroconf.unregister_service(service_info)
+            service_handler.join()
     except KeyboardInterrupt:
         pass
     finally:

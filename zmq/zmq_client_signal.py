@@ -18,7 +18,7 @@ class ZMQrecv():
         while (run == True):
             #print("sending request %d" % i)
             #self.client.send_string(str(i))
-            message = self.client.recv()
+            message = self.client.recv_string()
             print("Recieved message %s " %(message))
         self.client.close()
         self.context.term()

@@ -2,7 +2,6 @@ import zmq
 import threading
 import signal
 from time import sleep
-from dc_watchdog import DCWatchdog
 
 run = False
 
